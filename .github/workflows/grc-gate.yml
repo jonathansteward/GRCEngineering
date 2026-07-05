@@ -1,0 +1,63 @@
+# grc-gate: run the policy gate on every pull request.
+# This is a skeleton. The steps marked TODO are yours to write. The brief on
+# Patreon explains what each one does and why.
+name: grc-gate
+
+on:
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  grc-gate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Create Evidence Folder
+        run: mkdir -p evidence
+
+      # TODO: install Conftest (pin a version, do not use latest).
+      - name: Setup Conftest
+        uses: princespaghetti/setup-conftest@v1
+        with:
+          version: v0.56.0
+      
+      - name: Run Conftest for CM6
+        id: conftest_1
+        if: always()
+        run: conftest test --policy week-2/policies --namespace compliance.cm6_aws --output json plan-evidence/plan.json > evidence/conftest-results-cm6.json
+      
+      - name: Run Conftest for SC28
+        id: conftest_2
+        if: always()
+        run: conftest test --policy week-2/policies --namespace compliance.sc28_aws --output json plan-evidence/plan.json > evidence/conftest-results-sc28.json
+      
+      - name: Run Conftest for AC3
+        id: conftest_3
+        if: always()
+        run: conftest test --policy week-2/policies --namespace compliance.ac3_aws --output json plan-evidence/plan.json > evidence/conftest-results-ac3.json
+
+      - name: Upload Compliance Evidence
+        uses: actions/upload-artifact@v4
+        if: always() # Uploads even if the tests failed
+        with:
+          name: conftest-compliance-evidence
+          path: evidence/
+          retention-days: 14 # Optional: Cleans up old artifacts automatically
+
+      - name: Check Final Results
+        if: always() # Evaluates the status of all steps
+        run: |
+          if [ "${{ steps.conftest_1.outcome }}" = "failure" ] || \
+             [ "${{ steps.conftest_2.outcome }}" = "failure" ] || \
+             [ "${{ steps.conftest_3.outcome }}" = "failure" ]; then
+            echo "One or more Conftest policies failed."
+            exit 1
+          fi
+      # STRETCH: instead of a committed plan.json, assume an AWS role via OIDC
+      #          (no stored keys) and generate the plan in CI. See the brief.
