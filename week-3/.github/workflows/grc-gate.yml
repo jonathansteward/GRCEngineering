@@ -30,17 +30,17 @@ jobs:
       - name: Run Conftest for CM6
         id: conftest_1
         if: always()
-        run: conftest test --policy week-2/policies --namespace compliance.cm6_aws --output json week-2/plan.json > evidence/conftest-results-cm6.json
+        run: conftest test --policy week-2/policies --namespace compliance.cm6_aws --output json plan-evidence/plan.json > evidence/conftest-results-cm6.json
       
       - name: Run Conftest for SC28
         id: conftest_2
         if: always()
-        run: conftest test --policy week-2/policies --namespace compliance.sc28_aws --output json week-2/plan.json > evidence/conftest-results-sc28.json
+        run: conftest test --policy week-2/policies --namespace compliance.sc28_aws --output json plan-evidence/plan.json > evidence/conftest-results-sc28.json
       
       - name: Run Conftest for AC3
         id: conftest_3
         if: always()
-        run: conftest test --policy week-2/policies --namespace compliance.ac3_aws --output json week-2/plan.json > evidence/conftest-results-ac3.json
+        run: conftest test --policy week-2/policies --namespace compliance.ac3_aws --output json plan-evidence/plan.json > evidence/conftest-results-ac3.json
 
       - name: Upload Compliance Evidence
         uses: actions/upload-artifact@v4
